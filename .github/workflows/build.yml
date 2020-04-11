@@ -1,5 +1,5 @@
 name: vimflowy
-on:
+on: [push, pull_request]
 
 jobs:
 
