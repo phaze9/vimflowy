@@ -7,9 +7,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@master
 
-    - uses: actions/setup-node@v1
+    - uses: actions/setup-node@master
       with:
         node-version: '10.x'
       env:
@@ -21,9 +21,14 @@ jobs:
     - run: npm run build
     - run: npm run verify
 
-  package:
+  publish:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - run: docker build -t phaze9/vimflowy .
+    - uses: actions/checkout@master
+
+    - uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: phaze9/vimflowy
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
