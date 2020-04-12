@@ -26,14 +26,4 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    
-    - run: apt update
-    - run: apt -y install apt-transport-https ca-certificates curl software-properties-common
-    - run: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-    - run: add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
-    - run: apt update
-    - run: curl -O https://download.docker.com/linux/ubuntu/dists/bionic/pool/edge/amd64/containerd.io_1.2.2-3_amd64.deb
-    - run: apt install ./containerd.io_1.2.2-3_amd64.deb
-    - run: apt -y install docker-ce
-
     - run: docker build -t phaze9/vimflowy .
