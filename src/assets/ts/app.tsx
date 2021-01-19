@@ -8,11 +8,11 @@ Initialize the main page.  Rather messy logic for a bunch of stuff:
 - handle rendering logic
 */
 
-import * as $ from 'jquery';
+import $ from 'jquery';
 import * as React from 'react'; // tslint:disable-line no-unused-variable
 import * as ReactDOM from 'react-dom';
 
-import 'font-awesome/css/font-awesome.css';
+import 'font-awesome/css/font-awesome.min.css';
 import '../css/utils.sass';
 import '../css/index.sass';
 import '../css/view.sass';
@@ -322,7 +322,7 @@ $(document).ready(async () => {
     },
     getLinesPerPage: () => {
       const line_height = getLineHeight();
-      const page_height = $(document).height();
+      const page_height = $(document).height() as number;
       return page_height / line_height;
     },
   });
@@ -375,9 +375,9 @@ $(document).ready(async () => {
           showingKeyBindings={showingKeyBindings}
           keyBindings={keyBindings}
           initialBackendType={backend_type}
-        />,
+        /> as any, // TODO
         appEl,
-        resolve
+        resolve as any // TODO
       );
     });
 
@@ -397,12 +397,14 @@ $(document).ready(async () => {
 
   session.on('yank', (info) => {
     if (clientStore.getClientSetting('copyToClipboard')) {
-      let content: string;
+      let content: string, richContent: string;
       if (info.type === RegisterTypes.CHARS) {
         content = info.saved.join('');
+        richContent = info.saved.join('');
       } else if (info.type === RegisterTypes.SERIALIZED_ROWS) {
         const formatted = clientStore.getClientSetting('formattedCopy');
         const contents: Array<string> = [];
+        const richContents: Array<string> = ['<ul>'];
         const cache: {[id: number]: SerializedBlock} = {};
         const recurse = (p: any, depth: number) => {
           if (typeof p === 'string') { throw new Error('Expected non-pretty serialization');
@@ -411,12 +413,19 @@ $(document).ready(async () => {
 
           if (formatted) { contents.push(' '.repeat(depth * 4) + (p.collapsed ? '+ ' : '- ') + p.text);
           } else { contents.push(p.text); }
+          richContents.push('<li>' + p.text + '</li>');
 
           if (p.collapsed || !p.children) { return; }
+          richContents.push('<ul>');
           p.children.forEach((child: SerializedBlock) => recurse(child, depth + 1));
+          richContents.push('</ul>');
         };
         info.saved.forEach((p: SerializedBlock) => recurse(p, 0));
         content = contents.join('\n');
+        richContents.push('</ul>');
+        if (contents.length <= 1) { richContent = content; } else {
+          richContent = richContents.join('\n');
+        }
       } else if (info.type === RegisterTypes.CLONED_ROWS) {
         // For now, this does not copy, for efficiency reasons
         return;
@@ -424,7 +433,7 @@ $(document).ready(async () => {
         throw Error(`Unexpected yank with invalid info ${info}`);
       }
 
-      copyToClipboard(content);
+      copyToClipboard(content, richContent);
       // session.showMessage('Copied to clipboard!'
       //   + (content.length > 10 ? content.substr(0, 10) + '...' : content));
     }
@@ -476,7 +485,8 @@ $(document).ready(async () => {
     if (session.mode === 'SETTINGS') { return; }
 
     e.preventDefault();
-    const text: string = ((e.originalEvent || e) as any).clipboardData.getData('text/plain');
+    let text: string = ((e.originalEvent || e) as any).clipboardData.getData('text/plain');
+    text = text.replace(/(?:\r)/g, '');  // Remove \r (Carriage Return) from each line
     await keyHandler.queue(async () => {
       // TODO: deal with this better when there are multiple lines
       // maybe put in insert mode?
@@ -504,8 +514,21 @@ $(document).ready(async () => {
   // });
 });
 
-function copyToClipboard(text: string) {
+function copyToClipboard(text: string, richText?: string) {
   // https://stackoverflow.com/a/33928558/5937230
+
+  // https://stackoverflow.com/questions/23934656/javascript-copy-rich-text-contents-to-clipboard
+  function listener(e: ClipboardEvent) {
+    if (!e.clipboardData) {
+      return;
+    }
+    if (richText) {
+      e.clipboardData.setData('text/html', richText);
+    }
+    e.clipboardData.setData('text/plain', text);
+    e.preventDefault();
+  }
+
   if (window.clipboardData && window.clipboardData.setData) {
     // IE specific code path to prevent textarea being shown while dialog is visible.
     return window.clipboardData.setData('Text', text);
@@ -515,13 +538,17 @@ function copyToClipboard(text: string) {
     textarea.style.position = 'fixed';  // Prevent scrolling to bottom of page in MS Edge.
     document.body.appendChild(textarea);
     textarea.select();
+
+
     try {
+      document.addEventListener('copy', listener);
       return document.execCommand('copy');  // Security exception may be thrown by some browsers.
     } catch (ex) {
       console.warn('Copy to clipboard failed.', ex);
       return false;
     } finally {
       document.body.removeChild(textarea);
+      document.removeEventListener('copy', listener);
     }
   }
   return false;
