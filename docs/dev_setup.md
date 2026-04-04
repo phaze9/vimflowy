@@ -18,7 +18,11 @@ Then install dependencies:
 
     git clone https://github.com/WuTheFWasThat/vimflowy.git
     cd vimflowy
-    npm install
+    npm install --legacy-peer-deps
+
+The project currently depends on some older packages whose peer dependency
+constraints do not resolve cleanly with modern npm, so `--legacy-peer-deps`
+is required for a successful install.
 
 ### Run
 
