@@ -19,6 +19,7 @@ First, install vimflowy
 
     git clone https://github.com/WuTheFWasThat/vimflowy.git
     cd vimflowy
+    nvm use
     npm install
 
 Build assets
@@ -34,6 +35,22 @@ The `dbfolder` flag says where to store/load data.  If left empty, an in-memory 
 The `password` flag is optional.  Of course, it's wise to set one if you're using a widely accessible server, but pointless if you're hosting on your personal computer.
 
 You can also change the port (from the default of 3000) with the `--port ${portnumber}` flag.
+
+### Troubleshooting
+
+If startup fails with an error like:
+
+    Error: Cannot find module '.../node_modules/sqlite3/lib/binding/node-v127-darwin-arm64/node_sqlite3.node'
+
+then the `sqlite3` native binding does not match the active Node version.
+This was resolved by reinstalling dependencies with the repo's pinned Node
+version:
+
+    nvm use
+    rm -rf node_modules
+    npm install
+
+After reinstalling, rerun the build and server commands.
 
 ### Configure Vimflowy
 

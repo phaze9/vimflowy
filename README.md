@@ -56,7 +56,8 @@ You can deploy with docker, or build from source yourself.
 
 Contributions are very welcome!
 See [dev_setup.md](docs/dev_setup.md) to see how to get started with a development setup.
-Dependency installation currently requires `npm install --legacy-peer-deps`.
+This repo includes a local `.npmrc` so `npm install` uses legacy peer dependency
+resolution automatically.
 
 #### LICENSE
 

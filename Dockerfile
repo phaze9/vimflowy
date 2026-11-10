@@ -5,15 +5,15 @@ LABEL version="0.0.1"
 ENV NPM_CONFIG_LOGLEVEL=warn
 RUN npm config set progress=false
 WORKDIR /app/
-COPY package.json package-lock.json ./
-RUN npm install --legacy-peer-deps
+COPY package.json package-lock.json .npmrc ./
+RUN npm install
 COPY . .
 RUN REACT_APP_SERVER_CONFIG='{"socketserver": true}' npm run build
 
 FROM node:22-alpine
 WORKDIR /app
-COPY --from=build /app/package.json /app/package-lock.json ./
-RUN npm install --production --legacy-peer-deps
+COPY --from=build /app/package.json /app/package-lock.json /app/.npmrc ./
+RUN npm install --production
 RUN mkdir -p /app/build
 COPY --from=build /app/build/ /app/build
 VOLUME /app/db
