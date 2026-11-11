@@ -85,6 +85,7 @@ export default class BackendSettingsComponent extends React.Component<Props, Sta
   }
 
   public render() {
+    /* eslint-disable-next-line no-template-curly-in-string -- literal '${firebaseProjectId}' placeholder, not interpolation */
     const firebaseProjectIdStr = '${firebaseProjectId}';
     const firebaseBaseUrl = `https://console.firebase.google.com/project/${this.state.firebaseId || firebaseProjectIdStr}`;
 
