@@ -439,8 +439,13 @@ $(document).ready(async () => {
     }
   });
 
-  session.on('copyToClipboard', (content) => {
-    copyToClipboard(content);
+  session.on('copyToClipboard', async (content) => {
+    const copied = await copyToClipboard(content);
+    if (copied) {
+      session.showMessage('Copied selected node as Markdown');
+    } else {
+      session.showMessage('Unable to copy to clipboard', {text_class: 'error'});
+    }
   });
 
   session.on('importFinished', renderMain); // fire and forget
@@ -518,7 +523,19 @@ $(document).ready(async () => {
   // });
 });
 
-function copyToClipboard(text: string, richText?: string) {
+async function copyToClipboard(text: string, richText?: string): Promise<boolean> {
+  // The selected-subtree export is assembled asynchronously. Prefer the
+  // asynchronous Clipboard API because execCommand('copy') may be rejected
+  // after the original keyboard event has finished.
+  if (!richText && navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (ex) {
+      logger.warn('Async clipboard copy failed; trying legacy copy.', ex);
+    }
+  }
+
   // https://stackoverflow.com/a/33928558/5937230
 
   // https://stackoverflow.com/questions/23934656/javascript-copy-rich-text-contents-to-clipboard
@@ -535,7 +552,7 @@ function copyToClipboard(text: string, richText?: string) {
 
   if (window.clipboardData && window.clipboardData.setData) {
     // IE specific code path to prevent textarea being shown while dialog is visible.
-    return window.clipboardData.setData('Text', text);
+    return Boolean(window.clipboardData.setData('Text', text));
   } else if (document.queryCommandSupported && document.queryCommandSupported('copy')) {
     const textarea = document.createElement('textarea');
     textarea.textContent = text;
