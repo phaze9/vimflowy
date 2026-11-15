@@ -2,6 +2,23 @@
 import TestCase from '../testcase';
 
 describe('export', function() {
+  it('copies the selected subtree as markdown in normal and insert modes', async function() {
+    let t = new TestCase([
+      'first',
+      { text: 'second **bold**', children: [
+        { text: 'third', children: ['fourth'] },
+      ] },
+      'fifth',
+    ]);
+    t.sendKey('down');
+    t.sendKey('ctrl+m');
+    t.expectCopied('- second **bold**\n  - third\n    - fourth');
+    t.sendKey('i');
+    t.sendKey('meta+m');
+    t.expectCopied('- second **bold**\n  - third\n    - fourth');
+    await t.done();
+  });
+
   it('works in basic case', async function() {
     let t = new TestCase([
       { text: 'first', children: [

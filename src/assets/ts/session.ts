@@ -286,6 +286,26 @@ export default class Session extends EventEmitter {
     }
   }
 
+  public async exportSelectedMarkdown() {
+    const selected = await this.document.serialize(this.cursor.row);
+    const indent = '  ';
+    const exportLines = function(node: SerializedBlock): Array<string> {
+      if (typeof node === 'string') {
+        return [`- ${node}`];
+      }
+      if ('clone' in node) {
+        return [];
+      }
+
+      const lines = [`- ${node.text}`];
+      (node.children || []).forEach((child) => {
+        exportLines(child).forEach((line) => lines.push(`${indent}${line}`));
+      });
+      return lines;
+    };
+    return exportLines(selected).join('\n');
+  }
+
   public async exportFile(type = 'json') {
     this.showMessage('Exporting...', { time: 0 });
     const filename = this.document.name === '' ?

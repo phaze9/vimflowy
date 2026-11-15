@@ -11,3 +11,14 @@ keyDefinitions.registerAction(new Action(
   },
 ));
 
+keyDefinitions.registerAction(new Action(
+  'copy-selected-as-markdown',
+  'Copy selected node and its children as Markdown',
+  async function({ session }) {
+    session.emit('copyToClipboard', await session.exportSelectedMarkdown());
+  },
+  {
+    sequence: SequenceAction.DROP,
+  },
+));
+

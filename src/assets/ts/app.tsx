@@ -439,6 +439,10 @@ $(document).ready(async () => {
     }
   });
 
+  session.on('copyToClipboard', (content) => {
+    copyToClipboard(content);
+  });
+
   session.on('importFinished', renderMain); // fire and forget
 
   session.on('changeViewRoot', async (path: Path) => {

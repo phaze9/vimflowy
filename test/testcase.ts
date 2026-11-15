@@ -43,6 +43,7 @@ class TestCase {
   protected register: Register;
   protected pluginManager: PluginsManager;
   protected prom: Promise<void>;
+  private copiedContent: string | null = null;
 
   constructor(serialized: Array<SerializedBlock> = [''], options: TestCaseOptions = {}) {
     this.docStore = new DocumentStore(new InMemory());
@@ -53,6 +54,9 @@ class TestCase {
 
     this.session = new Session(this.clientStore, this.document, {
       viewRoot: Path.root(),
+    });
+    this.session.on('copyToClipboard', (content) => {
+      this.copiedContent = content;
     });
 
     const config: Config = vimConfig;
@@ -242,6 +246,12 @@ class TestCase {
     return this._chain(async () => {
       let content = await this.session.exportContent(mimeType);
       this._expectEqual(content, expected, 'Unexpected export content');
+    });
+  }
+
+  public expectCopied(expected: string) {
+    return this._chain(() => {
+      this._expectEqual(this.copiedContent, expected, 'Unexpected clipboard content');
     });
   }
 }

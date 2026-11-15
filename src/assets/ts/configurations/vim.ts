@@ -109,6 +109,7 @@ export const NORMAL_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'search-local': [['ctrl+/'], ['ctrl+f']],
   'search-global': [['/']],
   'export-file': [['ctrl+s']],
+  'copy-selected-as-markdown': [['ctrl+m'], ['meta+m']],
   'zoom-prev-sibling': [['alt+k']],
   'zoom-next-sibling': [['alt+j']],
   'zoom-in': [[']'], ['alt+l'], ['ctrl+right']],
@@ -167,6 +168,7 @@ export const INSERT_MODE_MAPPINGS: HotkeyMapping = Object.assign({
   'scroll-up': [['page up']],
   'undo': [['ctrl+z']],
   'redo': [['ctrl+Z']],
+  'copy-selected-as-markdown': [['ctrl+m'], ['meta+m']],
   'unindent-row': [],
   'indent-row': [],
   'unindent-blocks': [['shift+tab']],
@@ -324,6 +326,7 @@ function getDefaultData(): Array<SerializedBlock> {
         'Two import and export formats are supported.',
         'Check out settings for more information.',
         'You can regularly export your data in JSON format, as a form of backup',
+        'Press Ctrl+M or Cmd+M to copy the selected bullet and its descendants as Markdown',
       ] },
       'To make a new document with separate data, just add the "doc" query parameter. ' +
         `For example, ${window.location.origin}/?doc=newdocname#`,
