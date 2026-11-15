@@ -36,7 +36,7 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
 ## LIMITATIONS
 
 - No collaborative editing
-- Search remains a linear client-side scan. The UI stays responsive and publishes up to 20 results progressively, but global search over large remote documents can still be slow; see [search performance](docs/search.md#performance-and-storage-backends).
+- Search remains a linear client-side scan. The UI stays responsive and publishes up to 50 results progressively, but global search over large remote documents can still be slow; see [search performance](docs/search.md#performance-and-storage-backends).
 - You may need a relatively modern browser (minimally HTML5 LocalStorage and Flexbox).  I test only in recent versions of Chrome and Firefox.
 
 ## DATA STORAGE

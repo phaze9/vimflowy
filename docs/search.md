@@ -8,7 +8,7 @@ Vimflowy provides two outline searches:
 Search is case-insensitive by default. Whitespace separates query words, and
 every word must occur somewhere in the same row. Matching is by substring, so
 `flow` matches `vimflowy`. Results follow document traversal order and are
-limited to the first 20 matching rows.
+limited to the first 50 matching rows.
 
 ## Responsiveness
 
@@ -20,11 +20,15 @@ loop.
 
 When a query extends the previous query, Vimflowy may search only the earlier
 matches. This optimization is used only if the earlier scan was exhaustive. A
-result set that reached the 20-row cap cannot safely be reused because further
+result set that reached the 50-row cap cannot safely be reused because further
 matching rows may exist after the cap.
 
-The implementation deliberately does not retain a second normalized lowercase
-copy of every row. Search still normalizes row text during a scan.
+Each loaded row caches a normalized lowercase string. Case-insensitive searches
+reuse it instead of joining and lowercasing the row during every scan. The cache
+is updated whenever row text changes and preserved when only tree structure,
+collapsed state, or plugin data changes. This increases retained client memory
+by approximately one normalized copy of the loaded text, while reducing CPU,
+temporary allocations, and garbage collection during repeated searches.
 
 ## Performance and storage backends
 

@@ -14,9 +14,9 @@ General project notes (setup, verification, backends, CI) live in AGENTS.md.
 
 ## Search responsiveness (2026-11-15)
 
-- Global (`/`) and local (`Ctrl+/`) search retain the existing case-insensitive, whitespace-separated substring semantics. The default result cap is 20 rows.
+- Global (`/`) and local (`Ctrl+/`) search retain the existing case-insensitive, whitespace-separated substring semantics. The default result cap is 50 rows.
 - `Menu` debounces queries by 120 ms, assigns a generation to each query, ignores stale full and partial results, exposes a `searching` state, and emits `updated` when progressive or final results arrive. Search movement and selection call `flush()` first so fast `Ctrl+J`, `Ctrl+K`, or Enter input still acts on the newest query. Disposing a menu cancels pending work.
 - `Document.search()` accepts candidate paths, cancellation and progress callbacks. It yields to the browser event loop every 250 visited rows. Extended queries reuse previous candidates only when the earlier result set was exhaustive; never refine from a capped result set because matching rows beyond the cap would be lost.
-- The search UI publishes matches progressively and displays `Searching...` while a scan is active. No normalized lowercase row-text cache was added, avoiding the associated retained-memory cost.
+- The search UI publishes matches progressively and displays `Searching...` while a scan is active. Each loaded `CachedRowInfo` stores normalized lowercase text for case-insensitive search. Structural, collapsed-state and plugin-data cache updates preserve that string; `setLine()` rebuilds it when row text changes. Case-sensitive search continues to read the original line.
 - These changes improve perceived responsiveness but do not change the remote-search architecture: socket-server and direct Firebase searches still traverse document rows through the client. A future backend search RPC and persistent index are documented as scaling directions in `docs/search.md`, not as implemented behavior.
-- Regression coverage is in `test/tests/menu_responsiveness.ts`, with existing behavior covered by `test/tests/search.ts`. The implementation passed `npm run verify` with 262 Mocha tests, ESLint on changed files, and `git diff --check`.
+- Regression coverage is in `test/tests/menu_responsiveness.ts` and `test/tests/search_cache.ts`, with existing behavior covered by `test/tests/search.ts`. The implementation passed `npm run verify` with 263 Mocha tests, ESLint on changed files, and `git diff --check`.

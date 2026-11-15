@@ -38,6 +38,7 @@ export type AttachedChildInfo = {
 export class CachedRowInfo {
   public readonly row: Row;
   public readonly info: RowInfo;
+  public readonly normalizedText: string;
   // TODO: use immutable list?
   public readonly children: Array<CachedRowInfo | null>;
 
@@ -45,15 +46,18 @@ export class CachedRowInfo {
     row: Row,
     info: RowInfo,
     children: Array<CachedRowInfo | null>,
+    normalizedText: string | null = null,
   ) {
     this.row = row;
     this.info = info;
     this.children = children;
+    this.normalizedText = normalizedText === null ?
+      info.line.join('').toLowerCase() : normalizedText;
   }
 
   public clone() {
     return new CachedRowInfo(
-      this.row, this.info, this.children
+      this.row, this.info, this.children, this.normalizedText
     );
   }
 
@@ -74,14 +78,17 @@ export class CachedRowInfo {
   }
 
   public setChildren(children: Array<CachedRowInfo | null>): CachedRowInfo {
-    return new CachedRowInfo(this.row, this.info, children);
+    return new CachedRowInfo(this.row, this.info, children, this.normalizedText);
   }
-  private setInfo(info: RowInfo): CachedRowInfo {
-    return new CachedRowInfo(this.row, info, this.children);
+  private setInfo(info: RowInfo, lineChanged = false): CachedRowInfo {
+    return new CachedRowInfo(
+      this.row, info, this.children,
+      lineChanged ? null : this.normalizedText,
+    );
   }
   public setLine(line: Line): CachedRowInfo {
     const info: RowInfo = Object.assign({}, this.info, { line });
-    return this.setInfo(info);
+    return this.setInfo(info, true);
   }
   public setCollapsed(collapsed: boolean): CachedRowInfo {
     const info: RowInfo = Object.assign({}, this.info, { collapsed });
@@ -325,6 +332,10 @@ export default class Document extends EventEmitter {
 
   public async getText(row: Row) {
     return (await this.getLine(row)).join('');
+  }
+
+  public async getNormalizedText(row: Row) {
+    return (await this.getInfo(row)).normalizedText;
   }
 
   public async getChar(row: Row, col: Col) {
@@ -748,7 +759,7 @@ export default class Document extends EventEmitter {
 
   public async search(root: Path, query: string, options: SearchOptions = {}) {
     const {
-      nresults = 20,
+      nresults = 50,
       case_sensitive = false,
       candidates,
       shouldContinue = () => true,
@@ -780,8 +791,8 @@ export default class Document extends EventEmitter {
         results.exhaustive = false;
         break;
       }
-      const text = await this.getText(path.row);
-      const line = canonicalize(text);
+      const line = case_sensitive ?
+        await this.getText(path.row) : await this.getNormalizedText(path.row);
       const matches: Array<number> = [];
       if (_.every(query_words.map((word) => {
         const index = line.indexOf(word);
