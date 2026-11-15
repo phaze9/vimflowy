@@ -30,6 +30,7 @@ export default class MenuComponent extends React.Component<Props, State> {
       this.setState({ query });
     };
     this.props.session.on('handledKey', this.updateFn);
+    menu.on('updated', this.updateFn);
     this.updateFn();
   }
 
@@ -38,6 +39,7 @@ export default class MenuComponent extends React.Component<Props, State> {
       throw new Error('Unmounting before mounting!?');
     }
     this.props.session.off('handledKey', this.updateFn);
+    this.props.menu.off('updated', this.updateFn);
   }
 
   public render() {
@@ -78,7 +80,9 @@ export default class MenuComponent extends React.Component<Props, State> {
 
     if (menu.results.length === 0) {
       let message = '';
-      if (!(query && query.length)) {
+      if (menu.searching) {
+        message = 'Searching...';
+      } else if (!(query && query.length)) {
         message = 'Type something to search!';
       } else {
         message = 'No results!  Try typing something else';
@@ -89,7 +93,7 @@ export default class MenuComponent extends React.Component<Props, State> {
         </div>
       );
     } else {
-      searchResults = menu.results.map((result, i) => {
+      const renderedResults = menu.results.map((result, i) => {
         const selected = i === menu.selection;
 
         const renderOptions = result.renderOptions || {};
@@ -119,6 +123,12 @@ export default class MenuComponent extends React.Component<Props, State> {
           </div>
         );
       });
+      searchResults = (
+        <div>
+          {menu.searching ? <div style={{opacity: 0.5}}>Searching...</div> : null}
+          {renderedResults}
+        </div>
+      );
     }
 
     return (

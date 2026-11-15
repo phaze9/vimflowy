@@ -214,10 +214,11 @@ class TestCase {
   }
 
   public expectNumMenuResults(num_results: number) {
-    return this._chain(() => {
+    return this._chain(async () => {
       if (this.session.menu === null) {
         throw new Error('Menu was null while expecting menu results');
       }
+      await this.session.menu.flush();
       this._expectEqual(this.session.menu.results.length, num_results,
                         'Unexpected number of results');
     });

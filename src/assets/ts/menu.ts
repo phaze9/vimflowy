@@ -1,5 +1,6 @@
 import Session, { InMemorySession } from './session';
 import { Line } from './types';
+import EventEmitter from './utils/eventEmitter';
 
 /*
 Represents the menu shown in menu mode.
@@ -23,23 +24,37 @@ export type MenuResult = {
 };
 
 type Query = string;
-type SearchFn = (query: Query) => Promise<Array<MenuResult>>;
+type SearchFn = (
+  query: Query,
+  isCurrent: () => boolean,
+  publish: (results: Array<MenuResult>) => void,
+) => Promise<Array<MenuResult>>;
 
-export default class Menu {
+export default class Menu extends EventEmitter {
+  private static readonly searchDebounceMs: number = 120;
+
   private searchFn: SearchFn;
   public results: Array<MenuResult>;
   public selection: number;
+  public searching: boolean;
 
   public session: Session;
 
   private lastQuery: Query | null = null;
+  private generation: number = 0;
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingQuery: Query | null = null;
+  private pendingResolve: (() => void) | null = null;
+  private pendingPromise: Promise<void> = Promise.resolve();
 
   constructor(searchFn: SearchFn) {
+    super();
     this.searchFn = searchFn;
 
     // a bit of a overkill-y hack, use an entire session object internally
     this.session = new InMemorySession({ initialMode: 'INSERT' });
     this.selection = 1;
+    this.searching = false;
 
     this.results = [];
   }
@@ -66,15 +81,87 @@ export default class Menu {
     }
   }
 
-  public async update() {
+  public async update(): Promise<void> {
     const query = await this.session.curText();
-    if ((JSON.stringify(query)) !== (JSON.stringify(this.lastQuery))) {
-      this.lastQuery = query;
-      // const t = Date.now();
-      // console.log('updating results');
-      this.results = await this.searchFn(query);
-      // console.log('updating results took', Date.now() - t);
-      this.selection = 0;
+    if (query === this.lastQuery && this.pendingQuery === null) {
+      return;
+    }
+
+    this.generation++;
+    const generation = this.generation;
+    this.pendingQuery = query;
+    this.searching = true;
+    this.emit('updated');
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+    }
+    if (this.pendingResolve !== null) {
+      this.pendingResolve();
+    }
+    this.pendingPromise = new Promise<void>((resolve) => {
+      this.pendingResolve = resolve;
+    });
+    this.debounceTimer = setTimeout(() => {
+      this.runPendingSearch(generation).catch((err) => {
+        setTimeout(() => { throw err; });
+      });
+    }, Menu.searchDebounceMs);
+    return this.pendingPromise;
+  }
+
+  private async runPendingSearch(generation: number): Promise<void> {
+    const query = this.pendingQuery;
+    const resolve = this.pendingResolve;
+    this.pendingQuery = null;
+    this.pendingResolve = null;
+    this.debounceTimer = null;
+    if (query === null) {
+      if (resolve !== null) { resolve(); }
+      return;
+    }
+
+    try {
+      const isCurrent = () => generation === this.generation;
+      const publish = (results: Array<MenuResult>) => {
+        if (isCurrent()) {
+          this.results = results;
+          this.selection = 0;
+          this.emit('updated');
+        }
+      };
+      const results = await this.searchFn(query, isCurrent, publish);
+      if (generation === this.generation) {
+        this.lastQuery = query;
+        this.results = results;
+        this.selection = 0;
+        this.searching = false;
+        this.emit('updated');
+      }
+    } finally {
+      if (resolve !== null) { resolve(); }
+    }
+  }
+
+  public async flush(): Promise<void> {
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+      await this.runPendingSearch(this.generation);
+    } else {
+      await this.pendingPromise;
+    }
+  }
+
+  public dispose() {
+    this.generation++;
+    this.searching = false;
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    this.pendingQuery = null;
+    if (this.pendingResolve !== null) {
+      this.pendingResolve();
+      this.pendingResolve = null;
     }
   }
 

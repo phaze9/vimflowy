@@ -203,7 +203,22 @@ also deals with loading the initial document from the datastore, and serializing
 Currently, the separation between the Session and Document classes is not very good.  (see session.ts)
 */
 
-type SearchOptions = {nresults?: number, case_sensitive?: boolean};
+export type SearchResult = {
+  path: Path,
+  matches: Array<number>,
+};
+
+export type SearchResults = Array<SearchResult> & {
+  exhaustive: boolean,
+};
+
+type SearchOptions = {
+  nresults?: number,
+  case_sensitive?: boolean,
+  candidates?: Array<Path>,
+  shouldContinue?: () => boolean,
+  onProgress?: (results: SearchResults) => Promise<void>,
+};
 
 export default class Document extends EventEmitter {
   public cache: DocumentCache;
@@ -732,11 +747,17 @@ export default class Document extends EventEmitter {
   }
 
   public async search(root: Path, query: string, options: SearchOptions = {}) {
-    const { nresults = 10, case_sensitive = false } = options;
-    const results: Array<{
-      path: Path,
-      matches: Array<number>,
-    }> = []; // list of (path, index) pairs
+    const {
+      nresults = 20,
+      case_sensitive = false,
+      candidates,
+      shouldContinue = () => true,
+      onProgress,
+    } = options;
+    const results: SearchResults = Object.assign(
+      [] as Array<SearchResult>,
+      { exhaustive: true },
+    );
 
     if (query.length === 0) {
       return results;
@@ -746,8 +767,19 @@ export default class Document extends EventEmitter {
     const query_words =
       query.split(/\s/g).filter(x => x.length).map(canonicalize);
 
-    const paths = this.traverseSubtree(root);
+    const paths: AsyncIterable<Path> = candidates === undefined ?
+      this.traverseSubtree(root) :
+      (async function*() {
+        for (let i = 0; i < candidates.length; i++) {
+          yield candidates[i];
+        }
+      })();
+    let visited = 0;
     for await (let path of paths) {
+      if (!shouldContinue()) {
+        results.exhaustive = false;
+        break;
+      }
       const text = await this.getText(path.row);
       const line = canonicalize(text);
       const matches: Array<number> = [];
@@ -760,9 +792,21 @@ export default class Document extends EventEmitter {
         return true;
       }))) {
         results.push({ path, matches });
+        if (onProgress !== undefined) {
+          const partialResults: SearchResults = Object.assign(
+            results.slice(),
+            { exhaustive: false },
+          );
+          await onProgress(partialResults);
+        }
       }
       if (nresults > 0 && results.length === nresults) {
+        results.exhaustive = false;
         break;
+      }
+      visited++;
+      if (visited % 250 === 0) {
+        await fn_utils.timeout(0);
       }
     }
     return results;

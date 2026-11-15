@@ -2,14 +2,16 @@ import * as React from 'react';
 
 import Session from '../session';
 import Path from '../path';
+import { SearchResults } from '../document';
 import Menu from '../menu';
 import keyDefinitions, { Action } from '../keyDefinitions';
 
 async function start_search(searchRoot: Path, session: Session) {
   await session.setMode('SEARCH');
-  session.menu = new Menu(async (text) => {
-    const results = await session.document.search(searchRoot, text);
-    return Promise.all(
+  let previousQuery = '';
+  let previousResults: SearchResults | null = null;
+  const toMenuResults = async (results: SearchResults) => {
+    return await Promise.all(
       results.map(async ({ path, matches }) => {
         const accents: {[column: number]: boolean} = {};
         matches.forEach((i) => {
@@ -46,6 +48,23 @@ async function start_search(searchRoot: Path, session: Session) {
         };
       })
     );
+  };
+  session.menu = new Menu(async (text, isCurrent, publish) => {
+    const canRefine = previousQuery.length > 0 &&
+      previousResults !== null && previousResults.exhaustive &&
+      text.startsWith(previousQuery);
+    const results = await session.document.search(searchRoot, text, {
+      candidates: canRefine ? previousResults!.map((result) => result.path) : undefined,
+      shouldContinue: isCurrent,
+      onProgress: async (partialResults) => {
+        publish(await toMenuResults(partialResults));
+      },
+    });
+    if (isCurrent()) {
+      previousQuery = text;
+      previousResults = results;
+    }
+    return await toMenuResults(results);
   });
 }
 
@@ -109,6 +128,7 @@ keyDefinitions.registerAction(new Action(
     if (session.menu == null) {
       throw new Error('Menu session missing');
     }
+    await session.menu.flush();
     await session.menu.select();
     return await session.setMode('NORMAL');
   },
@@ -121,6 +141,7 @@ keyDefinitions.registerAction(new Action(
     if (session.menu == null) {
       throw new Error('Menu session missing');
     }
+    await session.menu.flush();
     return session.menu.up();
   },
 ));
@@ -132,6 +153,7 @@ keyDefinitions.registerAction(new Action(
     if (session.menu == null) {
       throw new Error('Menu session missing');
     }
+    await session.menu.flush();
     return session.menu.down();
   },
 ));

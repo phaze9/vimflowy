@@ -29,14 +29,14 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
   - data import from or export as text file (native Vimflowy format or Workflowy-compatible format)
   - copy the selected bullet and its descendants as Markdown with Ctrl+M or Cmd+M (works in normal and insert modes)
   - loads data lazily (good for huge documents)
-  - search (not like vim's)
+  - global and local subtree search (not like vim's; see [search documentation](docs/search.md))
   - cloning (bullets duplicated in multiple locations in a document)
   - customizable visual themes
 
 ## LIMITATIONS
 
 - No collaborative editing
-- Global search is slow for large documents (so you'll want to use marks)
+- Search remains a linear client-side scan. The UI stays responsive and publishes up to 20 results progressively, but global search over large remote documents can still be slow; see [search performance](docs/search.md#performance-and-storage-backends).
 - You may need a relatively modern browser (minimally HTML5 LocalStorage and Flexbox).  I test only in recent versions of Chrome and Firefox.
 
 ## DATA STORAGE

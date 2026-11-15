@@ -249,10 +249,15 @@ registerMode({
     if (session.menu == null) {
       throw new Error('No menu in session');
     }
-    await session.menu.update();
+    session.menu.update().catch((err) => {
+      setTimeout(() => { throw err; });
+    });
     keyStream.drop();
   },
   async exit(session) {
+    if (session.menu !== null) {
+      session.menu.dispose();
+    }
     session.menu = null;
     // NOTE: should keyStream.drop() here?
   },
@@ -264,7 +269,9 @@ registerMode({
       key = transform_insert_key(key);
       if (key.length === 1) {
         await context.session.menu.session.addCharsAtCursor([key]);
-        await context.session.menu.update();
+        context.session.menu.update().catch((err) => {
+          setTimeout(() => { throw err; });
+        });
         context.keyStream.drop();
         return [null, context];
       }
