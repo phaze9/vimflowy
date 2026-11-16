@@ -42,6 +42,7 @@ export default class Menu extends EventEmitter {
 
   private lastQuery: Query | null = null;
   private generation: number = 0;
+  private resultsGeneration: number = -1;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingQuery: Query | null = null;
   private pendingResolve: (() => void) | null = null;
@@ -125,6 +126,7 @@ export default class Menu extends EventEmitter {
       const publish = (results: Array<MenuResult>) => {
         if (isCurrent()) {
           this.results = results;
+          this.resultsGeneration = generation;
           this.selection = 0;
           this.emit('updated');
         }
@@ -133,6 +135,7 @@ export default class Menu extends EventEmitter {
       if (generation === this.generation) {
         this.lastQuery = query;
         this.results = results;
+        this.resultsGeneration = generation;
         this.selection = 0;
         this.searching = false;
         this.emit('updated');
@@ -148,6 +151,12 @@ export default class Menu extends EventEmitter {
       await this.runPendingSearch(this.generation);
     } else {
       await this.pendingPromise;
+    }
+  }
+
+  public async waitForCurrentResults(): Promise<void> {
+    if (this.resultsGeneration !== this.generation) {
+      await this.flush();
     }
   }
 

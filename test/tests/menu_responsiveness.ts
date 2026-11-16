@@ -1,6 +1,8 @@
 import * as _ from 'lodash';
 
 import Menu, { MenuResult } from '../../src/assets/ts/menu';
+import '../../src/assets/ts/definitions';
+import keyDefinitions, { Action } from '../../src/assets/ts/keyDefinitions';
 
 function result(text: string): MenuResult {
   return {
@@ -17,6 +19,14 @@ function assertEqual(actual: any, expected: any) {
 
 async function nextTask() {
   await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+async function runSearchAction(name: string, session: any) {
+  const action = keyDefinitions.getRegistration(name);
+  if (!(action instanceof Action)) {
+    throw new Error(`Missing search action ${name}`);
+  }
+  await action.definition({ session } as any);
 }
 
 describe('menu responsiveness', function() {
@@ -66,5 +76,38 @@ describe('menu responsiveness', function() {
     await firstSearch;
 
     assertEqual(menu.results[0].contents.join(''), 'ab');
+  });
+
+  it('navigates and selects progressive results before search finishes', async function() {
+    let finishSearch: (results: Array<MenuResult>) => void = () => null;
+    let selected = '';
+    const menu = new Menu(async (_query, _isCurrent, publish) => {
+      publish([
+        { contents: ['a'], fn: () => { selected = 'a'; } },
+        { contents: ['b'], fn: () => { selected = 'b'; } },
+      ]);
+      return await new Promise<Array<MenuResult>>((resolve) => {
+        finishSearch = resolve;
+      });
+    });
+    const session = {
+      menu,
+      setMode: async () => menu.dispose(),
+    };
+
+    await menu.session.addCharsAtCursor(['a']);
+    menu.update();
+    await nextTask();
+    const unfinishedSearch = menu.flush();
+    await nextTask();
+
+    assertEqual(menu.results.map((item) => item.contents.join('')), ['a', 'b']);
+    await runSearchAction('search-down', session);
+    assertEqual(menu.selection, 1);
+    await runSearchAction('search-select', session);
+
+    assertEqual(selected, 'b');
+    finishSearch([]);
+    await unfinishedSearch;
   });
 });

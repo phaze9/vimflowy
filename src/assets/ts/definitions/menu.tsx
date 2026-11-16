@@ -128,7 +128,7 @@ keyDefinitions.registerAction(new Action(
     if (session.menu == null) {
       throw new Error('Menu session missing');
     }
-    await session.menu.flush();
+    await session.menu.waitForCurrentResults();
     await session.menu.select();
     return await session.setMode('NORMAL');
   },
@@ -141,7 +141,7 @@ keyDefinitions.registerAction(new Action(
     if (session.menu == null) {
       throw new Error('Menu session missing');
     }
-    await session.menu.flush();
+    await session.menu.waitForCurrentResults();
     return session.menu.up();
   },
 ));
@@ -153,7 +153,7 @@ keyDefinitions.registerAction(new Action(
     if (session.menu == null) {
       throw new Error('Menu session missing');
     }
-    await session.menu.flush();
+    await session.menu.waitForCurrentResults();
     return session.menu.down();
   },
 ));
