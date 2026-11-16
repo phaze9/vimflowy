@@ -289,7 +289,7 @@ export default class Session extends EventEmitter {
   public async exportSelectedMarkdown() {
     const selected = await this.document.serialize(this.cursor.row);
     const indent = '  ';
-    const exportLines = function(node: SerializedBlock): Array<string> {
+    const exportListLines = function(node: SerializedBlock): Array<string> {
       if (typeof node === 'string') {
         return [`- ${node}`];
       }
@@ -299,11 +299,22 @@ export default class Session extends EventEmitter {
 
       const lines = [`- ${node.text}`];
       (node.children || []).forEach((child) => {
-        exportLines(child).forEach((line) => lines.push(`${indent}${line}`));
+        exportListLines(child).forEach((line) => lines.push(`${indent}${line}`));
       });
       return lines;
     };
-    return exportLines(selected).join('\n');
+    if (typeof selected === 'string') {
+      return selected;
+    }
+    if ('clone' in selected) {
+      return '';
+    }
+
+    const lines = [selected.text];
+    (selected.children || []).forEach((child) => {
+      exportListLines(child).forEach((line) => lines.push(line));
+    });
+    return lines.join('\n');
   }
 
   public async exportFile(type = 'json') {

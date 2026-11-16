@@ -12,10 +12,10 @@ describe('export', function() {
     ]);
     t.sendKey('down');
     t.sendKey('ctrl+m');
-    t.expectCopied('- second **bold**\n  - third\n    - fourth');
+    t.expectCopied('second **bold**\n- third\n  - fourth');
     t.sendKey('i');
     t.sendKey('meta+m');
-    t.expectCopied('- second **bold**\n  - third\n    - fourth');
+    t.expectCopied('second **bold**\n- third\n  - fourth');
     await t.done();
   });
 
