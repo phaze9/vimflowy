@@ -14,7 +14,7 @@ describe('export', function() {
     t.sendKey('ctrl+m');
     t.expectCopied('second **bold**\n- third\n  - fourth');
     t.sendKey('i');
-    t.sendKey('meta+m');
+    t.sendKey('ctrl+m');
     t.expectCopied('second **bold**\n- third\n  - fourth');
     await t.done();
   });

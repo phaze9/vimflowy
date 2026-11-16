@@ -27,7 +27,7 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
   - LaTeX and HTML rendering
 - Other
   - data import from or export as text file (native Vimflowy format or Workflowy-compatible format)
-  - copy the selected bullet and its descendants as Markdown with Ctrl+M or Cmd+M (works in normal and insert modes)
+  - copy the selected bullet and its descendants as Markdown with Ctrl+M (works in normal and insert modes)
   - loads data lazily (good for huge documents)
   - global and local subtree search (not like vim's; see [search documentation](docs/search.md))
   - cloning (bullets duplicated in multiple locations in a document)
