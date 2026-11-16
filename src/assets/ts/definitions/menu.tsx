@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import Session from '../session';
+import BreadcrumbsComponent from '../components/breadcrumbs';
 import Path from '../path';
 import { SearchResults } from '../document';
 import Menu from '../menu';
@@ -17,7 +18,17 @@ async function start_search(searchRoot: Path, session: Session) {
         matches.forEach((i) => {
           accents[i] = true;
         });
+        const crumbContents: {[row: number]: string} = {};
+        let ancestor = path.parent;
+        while (ancestor !== null) {
+          crumbContents[ancestor.row] = await session.document.getText(ancestor.row);
+          ancestor = ancestor.parent;
+        }
         return {
+          breadcrumbs: path.parent === null ? undefined : (
+            <BreadcrumbsComponent session={session} viewRoot={path}
+              crumbContents={crumbContents} onCrumbClick={undefined} compact={true}/>
+          ),
           contents: await session.document.getLine(path.row),
           renderHook(lineDiv: React.ReactElement<any>) {
             const cachedRow = session.document.cache.get(path.row);

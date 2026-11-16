@@ -28,6 +28,7 @@ class CrumbComponent extends React.PureComponent<CrumbProps, {}> {
 
 type BreadcrumbsProps = {
   session: Session;
+  compact?: boolean;
   viewRoot: Path;
   crumbContents: {[row: number]: string};
   onCrumbClick: ((...args: any[]) => void) | undefined;
@@ -87,7 +88,7 @@ export default class BreadcrumbsComponent extends React.Component<BreadcrumbsPro
     crumbNodes.reverse();
 
     return (
-      <div key='breadcrumbs' style={{ fontSize: 20, marginBottom: 10 }} >
+      <div key='breadcrumbs' style={{ fontSize: this.props.compact ? 12 : 20, marginBottom: this.props.compact ? 3 : 10 }} >
         {crumbNodes}
       </div>
     );

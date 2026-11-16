@@ -10,6 +10,7 @@ Internally uses an entire session object (this is sorta weird..)
 
 export type MenuResult = {
   contents: Line;
+  breadcrumbs?: import('react').ReactNode;
 
   // called when selected
   fn: any; // TODO

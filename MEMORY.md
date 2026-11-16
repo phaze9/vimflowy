@@ -20,3 +20,10 @@ General project notes (setup, verification, backends, CI) live in AGENTS.md.
 - The search UI publishes matches progressively and displays `Searching...` while a scan is active. Each loaded `CachedRowInfo` stores normalized lowercase text for case-insensitive search. Structural, collapsed-state and plugin-data cache updates preserve that string; `setLine()` rebuilds it when row text changes. Case-sensitive search continues to read the original line.
 - These changes improve perceived responsiveness but do not change the remote-search architecture: socket-server and direct Firebase searches still traverse document rows through the client. A future backend search RPC and persistent index are documented as scaling directions in `docs/search.md`, not as implemented behavior.
 - Regression coverage is in `test/tests/menu_responsiveness.ts` and `test/tests/search_cache.ts`, with existing behavior covered by `test/tests/search.ts`. The progressive-navigation implementation passed `npm run verify` with 264 Mocha tests, ESLint on changed files, and `git diff --check`.
+
+## Search result breadcrumbs (2026-11-16)
+
+- Global and local search results show a breadcrumb trail above each matching row, from the document root (home icon) through the row's parent. The matching row remains directly below the trail.
+- Search reuses `BreadcrumbsComponent` and its line-rendering hooks. Its optional `compact` prop uses 12px text and a 3px bottom margin; normal page headers retain 20px text and a 10px margin. Search breadcrumbs are informational, with no click handler.
+- `definitions/menu.tsx` loads ancestor text when preparing results and supplies an optional `MenuResult.breadcrumbs` node, rendered by the menu component. Other menu results are unaffected.
+- Validation: `npm run verify` passed with 264 Mocha tests; ESLint on all four changed source files and `git diff --check` passed. Browser appearance has not been independently verified.

@@ -117,6 +117,7 @@ export default class MenuComponent extends React.Component<Props, State> {
         }
         return (
           <div key={i} style={style}>
+            {result.breadcrumbs}
             <i style={{marginRight: 20}}
               className={`fa ${selected ? 'fa-arrow-circle-right' : 'fa-circle'} bullet`}/>
             {contents}
