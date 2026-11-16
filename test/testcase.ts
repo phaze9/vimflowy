@@ -1,4 +1,3 @@
-/* globals afterEach */
 
 import 'mocha';
 import * as _ from 'lodash';

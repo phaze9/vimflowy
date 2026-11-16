@@ -1,4 +1,3 @@
-/* globals describe, it */
 import TestCase from '../testcase';
 
 describe('random set of basic tests', function() {

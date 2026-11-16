@@ -1,4 +1,3 @@
-/* globals describe, it */
 import TestCase from '../testcase';
 
 describe('swapping case', function() {

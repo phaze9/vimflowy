@@ -6,7 +6,7 @@ registerPlugin({
   author: 'Jeff Wu',
   description: `
     Dummy example plugin for developers.
-    Prints \'Hello World\' when the plugin is loaded
+    Prints 'Hello World' when the plugin is loaded
   `,
 }, function (api) {
   api.session.showMessage('Example plugin: Hello world!');

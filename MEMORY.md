@@ -27,3 +27,9 @@ General project notes (setup, verification, backends, CI) live in AGENTS.md.
 - Search reuses `BreadcrumbsComponent` and its line-rendering hooks. Its optional `compact` prop uses 12px text and a 3px bottom margin; normal page headers retain 20px text and a 10px margin. Search breadcrumbs are informational, with no click handler.
 - `definitions/menu.tsx` loads ancestor text when preparing results and supplies an optional `MenuResult.breadcrumbs` node, rendered by the menu component. Other menu results are unaffected.
 - Validation: `npm run verify` passed with 264 Mocha tests; ESLint on all four changed source files and `git diff --check` passed. Browser appearance has not been independently verified.
+
+## Lint cleanup (2026-11-16)
+
+- Removed the redundant `/* globals describe, it */` (and `afterEach` in `test/testcase.ts`) headers: ESLint's `react-app/jest` preset already provides the mocha globals, so the JSDoc `globals` comment made ESLint report `@typescript-eslint/no-redeclare` for every test file. All 63 ESLint warnings dropped to 0.
+- Also fixed unnecessary backslash escapes around the quotes in the example plugin description (`src/plugins/examples/index.ts`).
+- Mirrors the same cleanup made in the ezflowy fork. Verified: ESLint clean, `npm run verify` passed with 264 tests, `git diff --check` clean.

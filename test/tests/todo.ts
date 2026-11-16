@@ -1,4 +1,3 @@
-/* globals describe, it */
 import TestCase from '../testcase';
 import * as Todo from '../../src/plugins/todo';
 import '../../src/assets/ts/plugins';
