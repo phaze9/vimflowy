@@ -33,3 +33,9 @@ General project notes (setup, verification, backends, CI) live in AGENTS.md.
 - Removed the redundant `/* globals describe, it */` (and `afterEach` in `test/testcase.ts`) headers: ESLint's `react-app/jest` preset already provides the mocha globals, so the JSDoc `globals` comment made ESLint report `@typescript-eslint/no-redeclare` for every test file. All 63 ESLint warnings dropped to 0.
 - Also fixed unnecessary backslash escapes around the quotes in the example plugin description (`src/plugins/examples/index.ts`).
 - Mirrors the same cleanup made in the ezflowy fork. Verified: ESLint clean, `npm run verify` passed with 264 tests, `git diff --check` clean.
+
+## Build warning cleanup (2026-11-19)
+
+- Firebase 8.2.1 Auth ships source maps with six Closure compiler synthetic source entries whose `sourcesContent` values are null. They are virtual sources, not missing project files. The `postinstall` hook runs `scripts/fix-firebase-source-maps.cjs` to embed empty content only for those entries in Auth's `.js.map` files. Real source content, mappings, application source maps, and warning reporting remain enabled. The repair is idempotent and reapplies on normal npm installs.
+- Refreshed `caniuse-lite` and `baseline-browser-mapping` in `package-lock.json` with `npx update-browserslist-db@latest`, removing the stale Browserslist data notice. Repeat that command when the data becomes outdated again.
+- Verified on Node 22.22.2: `CI=true npm run build` compiled successfully without warnings; `npm run verify` passed TSLint, TypeScript, and all 264 tests. ESLint on the new script, install-hook idempotence, and `git diff --check` also passed.

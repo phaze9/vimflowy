@@ -60,6 +60,12 @@ See [dev_setup.md](docs/dev_setup.md) to see how to get started with a developme
 This repo includes a local `.npmrc` so `npm install` uses legacy peer dependency
 resolution automatically.
 
+The install hook repairs missing content for Firebase 8 Auth's synthetic source-map
+entries. These virtual sources have no files on disk; the hook embeds empty content
+for them while preserving real source content and mappings. Application source maps
+and build warnings remain enabled. To refresh the browser compatibility data in the
+lockfile, run `npx update-browserslist-db@latest`.
+
 #### LICENSE
 
 MIT: https://wuthefwasthat.mit-license.org/
