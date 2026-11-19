@@ -32,7 +32,7 @@ General project notes (setup, verification, backends, CI) live in AGENTS.md.
 
 - Removed the redundant `/* globals describe, it */` (and `afterEach` in `test/testcase.ts`) headers: ESLint's `react-app/jest` preset already provides the mocha globals, so the JSDoc `globals` comment made ESLint report `@typescript-eslint/no-redeclare` for every test file. All 63 ESLint warnings dropped to 0.
 - Also fixed unnecessary backslash escapes around the quotes in the example plugin description (`src/plugins/examples/index.ts`).
-- Mirrors the same cleanup made in the ezflowy fork. Verified: ESLint clean, `npm run verify` passed with 264 tests, `git diff --check` clean.
+- Verified: ESLint clean, `npm run verify` passed with 264 tests, `git diff --check` clean.
 
 ## Build warning cleanup (2026-11-19)
 
