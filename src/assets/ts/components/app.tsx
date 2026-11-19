@@ -8,7 +8,7 @@ import { PluginsManager } from '../plugins';
 import Session from '../session';
 import Config from '../config';
 import KeyBindings from '../keyBindings';
-import { getStyles } from '../themes';
+import { getStyles, prefersDarkTheme } from '../themes';
 
 import SettingsComponent from './settings';
 import SessionComponent from './session';
@@ -30,6 +30,46 @@ type Props = {
 };
 
 export default class AppComponent extends React.Component<Props, {}> {
+  private appearanceQuery: MediaQueryList | null = null;
+
+  private onAppearanceChange = () => {
+    if (this.props.session.clientStore.getClientSetting('themeMode') === 'auto') {
+      this.forceUpdate();
+    }
+  }
+
+  private syncAppearance() {
+    const store = this.props.session.clientStore;
+    const mode = store.getClientSetting('themeMode');
+    const dark = mode === 'dark' || (mode === 'auto' && prefersDarkTheme());
+    document.documentElement.style.colorScheme = mode === 'custom' ? 'normal' : (dark ? 'dark' : 'light');
+    document.body.style.backgroundColor = store.getClientSetting('theme-bg-primary');
+    document.body.style.color = store.getClientSetting('theme-text-primary');
+    const properties: Array<'theme-bg-primary' | 'theme-text-primary' | 'theme-trim'> =
+      ['theme-bg-primary', 'theme-text-primary', 'theme-trim'];
+    properties.forEach((key) => {
+      document.documentElement.style.setProperty(`--${key}`, store.getClientSetting(key));
+    });
+  }
+
+  public componentDidMount() {
+    if (typeof window.matchMedia === 'function') {
+      this.appearanceQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      this.appearanceQuery.addEventListener('change', this.onAppearanceChange);
+    }
+    this.syncAppearance();
+  }
+
+  public componentDidUpdate() {
+    this.syncAppearance();
+  }
+
+  public componentWillUnmount() {
+    if (this.appearanceQuery) {
+      this.appearanceQuery.removeEventListener('change', this.onAppearanceChange);
+    }
+  }
+
   public render() {
     if (this.props.error !== null) {
       const wasExpected = this.props.error instanceof errors.ExpectedError;

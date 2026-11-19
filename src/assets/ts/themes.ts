@@ -2,6 +2,13 @@ import * as React from 'react';
 
 import { ClientStore } from './datastore';
 
+export type ThemeMode = 'light' | 'dark' | 'auto' | 'custom';
+
+export function prefersDarkTheme(): boolean {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 export type Theme = {
   'theme-bg-primary': string,
   'theme-bg-secondary': string,
@@ -148,3 +155,8 @@ export const themes: {[key: string]: Theme} = {
 };
 
 export const defaultTheme = themes.Default;
+
+// Blocks skip unrelated renders, but must repaint every color when the palette changes.
+export function themeSignature(clientStore: ClientStore): string {
+  return (Object.keys(defaultTheme) as Array<keyof Theme>).map((key) => clientStore.getClientSetting(key)).join(',');
+}

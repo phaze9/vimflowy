@@ -3,7 +3,7 @@ import * as fn_utils from './utils/functional';
 import logger from '../../shared/utils/logger';
 import DataBackend, { SynchronousDataBackend } from '../../shared/data_backend';
 import * as ClientDataBackends from './data_backend';
-import { Theme, defaultTheme } from './themes';
+import { Theme, ThemeMode, themes, defaultTheme, prefersDarkTheme } from './themes';
 
 import { Row, Line, SerializedPath, MacroMap } from './types';
 
@@ -22,6 +22,7 @@ Currently, DataStore has a synchronous API.  This may need to change eventually.
 // TODO: plugin enabling should get to choose if local or remote
 
 export type ClientSettings = Theme & {
+  themeMode: ThemeMode;
   showKeyBindings: boolean;
   hotkeys: any; // TODO
   copyToClipboard: boolean;
@@ -32,6 +33,7 @@ type ClientSetting = keyof ClientSettings;
 
 const default_client_settings: ClientSettings =
   Object.assign({}, defaultTheme, {
+    themeMode: 'auto' as ThemeMode,
     showKeyBindings: true,
     hotkeys: {},
     copyToClipboard: true,
@@ -73,6 +75,11 @@ export class ClientStore {
     this.backend = backend;
     this.docname = docname;
     this.prefix = `${docname}save`;
+    // Preserve palettes saved before the appearance setting existed.
+    if (this.backend.get('settings:themeMode') === null &&
+        Object.keys(defaultTheme).some((key) => this.backend.get(`settings:${key}`) !== null)) {
+      this._set('settings:themeMode', 'custom');
+    }
   }
 
   private _get<T>(key: string, default_value: T): T {
@@ -135,10 +142,23 @@ export class ClientStore {
   }
 
   public getClientSetting<S extends ClientSetting>(setting: S): ClientSettings[S] {
+    if (Object.prototype.hasOwnProperty.call(defaultTheme, setting)) {
+      const mode = this.getClientSetting('themeMode');
+      if (mode !== 'custom') {
+        const dark = mode === 'dark' || (mode === 'auto' && prefersDarkTheme());
+        return (dark ? themes.Dark : themes.Default)[setting as keyof Theme] as ClientSettings[S];
+      }
+    }
     return this._get(this._settingKey_(setting), default_client_settings[setting]);
   }
 
   public setClientSetting<S extends ClientSetting>(setting: S, value: ClientSettings[S]) {
+    if (Object.prototype.hasOwnProperty.call(defaultTheme, setting) && this.getClientSetting('themeMode') !== 'custom') {
+      const palette = {} as Theme;
+      (Object.keys(defaultTheme) as Array<keyof Theme>).forEach((key) => { palette[key] = this.getClientSetting(key); });
+      (Object.keys(palette) as Array<keyof Theme>).forEach((key) => { this._set(this._settingKey_(key), palette[key]); });
+      this._set('settings:themeMode', 'custom');
+    }
     this._set(this._settingKey_(setting), value);
   }
 

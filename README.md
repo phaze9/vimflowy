@@ -31,7 +31,7 @@ This is a productivity tool which draws some inspiration from workflowy and vim.
   - loads data lazily (good for huge documents)
   - global and local subtree search (not like vim's; see [search documentation](docs/search.md))
   - cloning (bullets duplicated in multiple locations in a document)
-  - customizable visual themes
+  - customizable visual themes; Settings → Visual theme → Appearance offers Light, Dark, or Auto (follows the operating system)
 
 ## LIMITATIONS
 

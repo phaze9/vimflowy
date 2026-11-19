@@ -18,7 +18,7 @@ import KeyBindings from '../keyBindings';
 import KeyMappings from '../keyMappings';
 import { PluginsManager } from '../plugins';
 import { BackendType } from '../data_backend';
-import { Theme, getStyles, themes } from '../themes';
+import { Theme, ThemeMode, getStyles, themes } from '../themes';
 import { SERVER_CONFIG } from '../constants';
 
 import SessionComponent from './session';
@@ -309,6 +309,19 @@ export default class SettingsComponent extends React.Component<Props, State> {
         tab: TABS.THEME,
         heading: 'Visual theme',
         div: (
+          <div>
+            <label htmlFor='theme-mode'>Appearance </label>
+            <select id='theme-mode' value={session.clientStore.getClientSetting('themeMode')}
+              onChange={(event) => {
+                session.clientStore.setClientSetting('themeMode', event.target.value as ThemeMode);
+                updateAll();
+              }}>
+              <option value='auto'>Auto (system)</option>
+              <option value='light'>Light</option>
+              <option value='dark'>Dark</option>
+              <option value='custom'>Custom colors</option>
+            </select>
+            <p>Auto follows your operating system’s light or dark appearance.</p>
           <div style={{ display: 'flex' }}>
             <div style={{ padding: 5, flexBasis: 1, flexGrow: 1 }}>
               <div className='settings-header'
@@ -452,6 +465,7 @@ export default class SettingsComponent extends React.Component<Props, State> {
                 }
               </div>
             </div>
+          </div>
           </div>
         ),
       },
